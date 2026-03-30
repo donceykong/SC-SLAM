@@ -21,23 +21,9 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial.transform import Rotation
 
-from overlay_scans_dsm import (
-    _find_poses_csv,
-    load_poses,
-    apply_imu_to_lidar,
+from utils import (
+    _find_poses_csv, load_poses, apply_imu_to_lidar, get_keyframe_indices,
 )
-
-
-def get_keyframe_indices(poses, n_avail, keyframe_dist):
-    """Select keyframe indices by minimum distance between consecutive poses."""
-    indices = [0]
-    last_pos = poses[0, 1:4].copy()
-    for i in range(1, n_avail):
-        pos = poses[i, 1:4]
-        if np.linalg.norm(pos - last_pos) >= keyframe_dist:
-            indices.append(i)
-            last_pos = pos.copy()
-    return indices
 
 
 def _parse_args():

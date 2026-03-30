@@ -40,51 +40,13 @@ import pyvista as pv
 from scipy.spatial import KDTree
 from scipy.spatial.transform import Rotation
 
-# IMU → LiDAR extrinsic (CU_MULTI platform)
-IMU_TO_LIDAR_T = np.array([-0.058038, 0.015573, 0.049603])
-IMU_TO_LIDAR_Q = [0.0, 0.0, 1.0, 0.0]  # [qx, qy, qz, qw]
+from utils import (
+    IMU_TO_LIDAR_T, IMU_TO_LIDAR_Q,
+    _find_poses_csv, load_poses, apply_imu_to_lidar, get_keyframe_indices,
+)
 
 # Labels to ignore in overlap counting (per build_map_from_labels / view_DSM_DEM_OSM_SCANS)
 LABEL_IGNORE = {0, 10, 11}  # unlabeled, vehicle, tree
-
-
-def _find_poses_csv(robot_dir: str, robot_name: str, env_name: str):
-    """Locate the poses CSV inside *robot_dir*."""
-    expected = os.path.join(robot_dir, f"{robot_name}_{env_name}_gt_utm_poses.csv")
-    if os.path.isfile(expected):
-        return expected
-    for f in os.listdir(robot_dir):
-        if f.endswith("_utm_poses.csv"):
-            return os.path.join(robot_dir, f)
-    fb = os.path.join(robot_dir, "poses.csv")
-    return fb if os.path.isfile(fb) else None
-
-
-def load_poses(csv_path: str) -> np.ndarray:
-    """Read poses CSV → (N, 8+) array [timestamp, x, y, z, qx, qy, qz, qw]."""
-    rows = []
-    with open(csv_path) as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            parts = line.split(",")
-            if len(parts) < 8:
-                continue
-            try:
-                rows.append([float(v) for v in parts])
-            except ValueError:
-                continue
-    return np.array(rows)
-
-
-def apply_imu_to_lidar(poses: np.ndarray) -> None:
-    """Transform IMU-frame poses to LiDAR-frame in-place."""
-    rot_ext = Rotation.from_quat(IMU_TO_LIDAR_Q).as_matrix()
-    for i in range(len(poses)):
-        R_imu = Rotation.from_quat(poses[i, 4:8]).as_matrix()
-        poses[i, 1:4] += R_imu @ IMU_TO_LIDAR_T
-        poses[i, 4:8] = Rotation.from_matrix(R_imu @ rot_ext).as_quat()
 
 
 def filter_distance(
@@ -161,17 +123,6 @@ def quaternion_angle_diff(q1: np.ndarray, q2: np.ndarray) -> float:
     dot = np.abs(np.dot(q1, q2))
     return 2.0 * np.arccos(np.clip(dot, 0.0, 1.0))
 
-
-def get_keyframe_indices(poses: np.ndarray, n_avail: int, keyframe_dist: float = 20.0):
-    """Select keyframe indices by minimum distance between consecutive poses."""
-    indices = [0]
-    last_pos = poses[0, 1:4].copy()
-    for i in range(1, n_avail):
-        pos = poses[i, 1:4]
-        if np.linalg.norm(pos - last_pos) >= keyframe_dist:
-            indices.append(i)
-            last_pos = pos.copy()
-    return indices
 
 
 def _compute_fpfh_descriptiveness(pts: np.ndarray, voxel_leaf: float) -> np.ndarray:
@@ -341,13 +292,13 @@ def main():
     p.add_argument(
         "--min-dist",
         type=float,
-        default=None,
+        default=5.0,
         help="Min point distance (m) from robot pose to keep",
     )
     p.add_argument(
         "--max-dist",
         type=float,
-        default=None,
+        default=200.0,
         help="Max point distance (m) from robot pose to keep",
     )
     p.add_argument(
@@ -376,7 +327,7 @@ def main():
     p.add_argument(
         "--fpfh-weight",
         type=float,
-        default=0.0,
+        default=100.0,
         help="Boost overlap for geometrically distinctive points (FPFH). 0=off. Requires open3d.",
     )
     p.add_argument(

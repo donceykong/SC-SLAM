@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dds>
+    <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+        <!-- Default participant profile for all nodes -->
+        <participant profile_name="participant_profile" is_default_profile="true">
+            <rtps>
+                <!-- Use shared memory for same-host communication (much faster for large msgs) -->
+                <useBuiltinTransports>true</useBuiltinTransports>
+                <!-- Increase send/receive buffer sizes for large PointCloud2 messages -->
+                <sendSocketBufferSize>2097152</sendSocketBufferSize>  <!-- 2MB -->
+                <listenSocketBufferSize>2097152</listenSocketBufferSize>  <!-- 2MB -->
+            </rtps>
+        </participant>
+
+        <!-- Default publisher profile -->
+        <data_writer profile_name="default_publisher" is_default_profile="true">
+            <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+            <qos>
+                <reliability>
+                    <kind>RELIABLE</kind>
+                </reliability>
+                <publishMode>
+                    <kind>ASYNCHRONOUS</kind>  <!-- Don't block publisher on large msgs -->
+                </publishMode>
+            </qos>
+        </data_writer>
+
+        <!-- Default subscriber profile -->
+        <data_reader profile_name="default_subscriber" is_default_profile="true">
+            <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+            <qos>
+                <reliability>
+                    <kind>RELIABLE</kind>
+                </reliability>
+            </qos>
+        </data_reader>
+    </profiles>
+</dds>

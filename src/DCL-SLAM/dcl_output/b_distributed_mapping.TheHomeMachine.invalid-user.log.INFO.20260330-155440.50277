@@ -1,0 +1,5 @@
+Log file created at: 2026/03/30 15:54:40
+Running on machine: TheHomeMachine
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0330 15:54:40.951275 50277 distributedMappingBasis.cpp:11] distributed mapping class initialization
+I0330 15:54:41.010452 50277 distributedMappingBasis.cpp:253] distributed mapping class initialization finish

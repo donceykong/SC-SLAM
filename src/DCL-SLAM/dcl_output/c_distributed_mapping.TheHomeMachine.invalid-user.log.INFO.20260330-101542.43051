@@ -1,0 +1,237 @@
+Log file created at: 2026/03/30 10:15:42
+Running on machine: TheHomeMachine
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0330 10:15:42.496783 43051 distributedMappingBasis.cpp:11] distributed mapping class initialization
+I0330 10:15:42.715155 43051 distributedMappingBasis.cpp:253] distributed mapping class initialization finish
+I0330 10:15:50.907390 43051 distributedMapping.cpp:355] createPrior:[2]0 0 00.0673945 -0.0889237 1.20247.
+I0330 10:15:50.908530 43051 distributedMapping.cpp:420] save:[2]--[0]--0 0 0 0.0673945 -0.0889237 1.20247.
+I0330 10:15:50.914899 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:15:56.041201 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:0.
+I0330 10:15:56.838433 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:0.
+I0330 10:15:58.499970 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:1.
+I0330 10:15:59.467555 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:2.
+I0330 10:16:00.473052 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:3.
+I0330 10:16:01.450736 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:4.
+I0330 10:16:01.732504 43051 distributedMapping.cpp:386] createOdom:[2][0-1]--[0 0 00.0673945 -0.0889237 1.20247],[0.243874 0.961781 0.1009320.0206625 -0.0921144 1.4041].
+I0330 10:16:01.732662 43051 distributedMapping.cpp:420] save:[2]--[1]--0.243874 0.961781 0.100932 0.0206625 -0.0921144 1.4041.
+I0330 10:16:01.757452 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:01.757694 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:1.
+I0330 10:16:02.473469 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:5.
+I0330 10:16:02.696301 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:2.
+I0330 10:16:02.892177 43051 distributedMapping.cpp:386] createOdom:[2][1-2]--[0.243874 0.961781 0.1009320.0206625 -0.0921144 1.4041],[0.398211 2.0975 0.2038350.0205424 -0.096437 1.43344].
+I0330 10:16:02.892442 43051 distributedMapping.cpp:420] save:[2]--[2]--0.398211 2.0975 0.203835 0.0205424 -0.096437 1.43344.
+I0330 10:16:02.908419 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:03.464983 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:6.
+I0330 10:16:03.653191 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:3.
+I0330 10:16:03.900626 43051 distributedMapping.cpp:386] createOdom:[2][2-3]--[0.398211 2.0975 0.2038350.0205424 -0.096437 1.43344],[0.534231 3.20361 0.3122320.0247747 -0.0991473 1.42154].
+I0330 10:16:03.900844 43051 distributedMapping.cpp:420] save:[2]--[3]--0.534231 3.20361 0.312232 0.0247747 -0.0991473 1.42154.
+I0330 10:16:03.910758 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:04.470983 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:7.
+I0330 10:16:04.711359 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:4.
+I0330 10:16:04.902863 43051 distributedMapping.cpp:386] createOdom:[2][3-4]--[0.534231 3.20361 0.3122320.0247747 -0.0991473 1.42154],[0.666323 4.33052 0.3842820.0269701 -0.100296 1.40458].
+I0330 10:16:04.903002 43051 distributedMapping.cpp:420] save:[2]--[4]--0.666323 4.33052 0.384282 0.0269701 -0.100296 1.40458.
+I0330 10:16:04.918529 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:05.462388 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:8.
+I0330 10:16:05.662985 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:5.
+I0330 10:16:05.898391 43051 distributedMapping.cpp:386] createOdom:[2][4-5]--[0.666323 4.33052 0.3842820.0269701 -0.100296 1.40458],[0.843793 5.48399 0.4546060.0348407 -0.0677581 1.39453].
+I0330 10:16:05.898542 43051 distributedMapping.cpp:420] save:[2]--[5]--0.843793 5.48399 0.454606 0.0348407 -0.0677581 1.39453.
+I0330 10:16:05.908802 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:05.967295 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[5][20] and [0]-[4][6].
+I0330 10:16:06.461294 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:9.
+I0330 10:16:06.668497 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:6.
+I0330 10:16:06.911331 43051 distributedMapping.cpp:386] createOdom:[2][5-6]--[0.843793 5.48399 0.4546060.0348407 -0.0677581 1.39453],[1.0052 6.56518 0.5072970.0338732 -0.069775 1.37831].
+I0330 10:16:06.911566 43051 distributedMapping.cpp:420] save:[2]--[6]--1.0052 6.56518 0.507297 0.0338732 -0.069775 1.37831.
+I0330 10:16:06.923260 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:06.980432 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[6][23] and [0]-[6][12].
+I0330 10:16:07.468039 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:10.
+I0330 10:16:07.717959 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:7.
+I0330 10:16:07.930440 43051 distributedMapping.cpp:386] createOdom:[2][6-7]--[1.0052 6.56518 0.5072970.0338732 -0.069775 1.37831],[1.20906 7.67614 0.5618890.0380134 -0.0643007 1.31829].
+I0330 10:16:07.930591 43051 distributedMapping.cpp:420] save:[2]--[7]--1.20906 7.67614 0.561889 0.0380134 -0.0643007 1.31829.
+I0330 10:16:07.940454 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:08.009788 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[7][26] and [0]-[6][12].
+I0330 10:16:08.539177 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:8.
+I0330 10:16:08.539238 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:11.
+I0330 10:16:09.131064 43051 distributedMapping.cpp:386] createOdom:[2][7-8]--[1.20906 7.67614 0.5618890.0380134 -0.0643007 1.31829],[1.55403 8.81737 0.6399460.0450092 -0.0642697 1.24951].
+I0330 10:16:09.131218 43051 distributedMapping.cpp:420] save:[2]--[8]--1.55403 8.81737 0.639946 0.0450092 -0.0642697 1.24951.
+I0330 10:16:09.142372 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:09.290699 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[8][29] and [0]-[7][15].
+I0330 10:16:09.475999 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:12.
+I0330 10:16:09.520612 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:9.
+I0330 10:16:10.123739 43051 distributedMapping.cpp:386] createOdom:[2][8-9]--[1.55403 8.81737 0.6399460.0450092 -0.0642697 1.24951],[1.84968 9.78467 0.6900180.0487661 -0.0608508 1.23137].
+I0330 10:16:10.123885 43051 distributedMapping.cpp:420] save:[2]--[9]--1.84968 9.78467 0.690018 0.0487661 -0.0608508 1.23137.
+I0330 10:16:10.139135 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:10.325101 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[9][32] and [0]-[8][18].
+I0330 10:16:10.532598 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:13.
+I0330 10:16:10.532652 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:10.
+I0330 10:16:11.125473 43051 distributedMapping.cpp:386] createOdom:[2][9-10]--[1.84968 9.78467 0.6900180.0487661 -0.0608508 1.23137],[2.19512 10.7526 0.7270960.0515606 -0.0592252 1.19086].
+I0330 10:16:11.125658 43051 distributedMapping.cpp:420] save:[2]--[10]--2.19512 10.7526 0.727096 0.0515606 -0.0592252 1.19086.
+I0330 10:16:11.137737 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:11.327666 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[10][35] and [0]-[9][21].
+I0330 10:16:11.345512 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:11.
+I0330 10:16:11.537017 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:14.
+I0330 10:16:12.130738 43051 distributedMapping.cpp:386] createOdom:[2][10-11]--[2.19512 10.7526 0.7270960.0515606 -0.0592252 1.19086],[2.57278 11.7333 0.7621980.0542084 -0.058419 1.16755].
+I0330 10:16:12.130901 43051 distributedMapping.cpp:420] save:[2]--[11]--2.57278 11.7333 0.762198 0.0542084 -0.058419 1.16755.
+I0330 10:16:12.142248 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:12.326042 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[11][38] and [0]-[10][24].
+I0330 10:16:12.342485 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:12.
+I0330 10:16:12.520233 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:15.
+I0330 10:16:13.142606 43051 distributedMapping.cpp:386] createOdom:[2][11-12]--[2.57278 11.7333 0.7621980.0542084 -0.058419 1.16755],[2.95734 12.7067 0.8129730.054919 -0.0580253 1.1603].
+I0330 10:16:13.142830 43051 distributedMapping.cpp:420] save:[2]--[12]--2.95734 12.7067 0.812973 0.054919 -0.0580253 1.1603.
+I0330 10:16:13.155934 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:13.351796 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:13.
+I0330 10:16:13.530910 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:16.
+I0330 10:16:14.135174 43051 distributedMapping.cpp:386] createOdom:[2][12-13]--[2.95734 12.7067 0.8129730.054919 -0.0580253 1.1603],[3.33884 13.6515 0.8474840.0553235 -0.0615895 1.19821].
+I0330 10:16:14.135324 43051 distributedMapping.cpp:420] save:[2]--[13]--3.33884 13.6515 0.847484 0.0553235 -0.0615895 1.19821.
+I0330 10:16:14.147105 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:14.343469 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:14.
+I0330 10:16:14.476387 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:17.
+I0330 10:16:15.114647 43051 distributedMapping.cpp:386] createOdom:[2][13-14]--[3.33884 13.6515 0.8474840.0553235 -0.0615895 1.19821],[3.6857 14.623 0.897570.0577401 -0.0625919 1.2168].
+I0330 10:16:15.114799 43051 distributedMapping.cpp:420] save:[2]--[14]--3.6857 14.623 0.89757 0.0577401 -0.0625919 1.2168.
+I0330 10:16:15.125442 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:15.317133 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[14][47] and [0]-[12][30].
+I0330 10:16:15.340891 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:15.
+I0330 10:16:15.549292 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:18.
+I0330 10:16:16.119156 43051 distributedMapping.cpp:386] createOdom:[2][14-15]--[3.6857 14.623 0.897570.0577401 -0.0625919 1.2168],[4.03745 15.6368 0.9402460.0589458 -0.0626485 1.21366].
+I0330 10:16:16.119340 43051 distributedMapping.cpp:420] save:[2]--[15]--4.03745 15.6368 0.940246 0.0589458 -0.0626485 1.21366.
+I0330 10:16:16.136147 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:16.339639 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:16.
+I0330 10:16:16.535122 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:19.
+I0330 10:16:17.145118 43051 distributedMapping.cpp:386] createOdom:[2][15-16]--[4.03745 15.6368 0.9402460.0589458 -0.0626485 1.21366],[4.37935 16.6692 0.9891930.0599864 -0.0670319 1.24284].
+I0330 10:16:17.145288 43051 distributedMapping.cpp:420] save:[2]--[16]--4.37935 16.6692 0.989193 0.0599864 -0.0670319 1.24284.
+I0330 10:16:17.156196 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:17.348037 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:17.
+I0330 10:16:17.350807 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[16][53] and [0]-[13][33].
+I0330 10:16:17.532922 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:20.
+I0330 10:16:18.138929 43051 distributedMapping.cpp:386] createOdom:[2][16-17]--[4.37935 16.6692 0.9891930.0599864 -0.0670319 1.24284],[4.69046 17.7487 1.050640.0572137 -0.0705363 1.3126].
+I0330 10:16:18.139187 43051 distributedMapping.cpp:420] save:[2]--[17]--4.69046 17.7487 1.05064 0.0572137 -0.0705363 1.3126.
+I0330 10:16:18.152719 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:18.357601 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[17][56] and [0]-[16][43].
+I0330 10:16:18.360392 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:18.
+I0330 10:16:18.562165 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:21.
+I0330 10:16:19.131160 43051 distributedMapping.cpp:386] createOdom:[2][17-18]--[4.69046 17.7487 1.050640.0572137 -0.0705363 1.3126],[4.94636 18.7869 1.109150.0591193 -0.07369 1.31785].
+I0330 10:16:19.131369 43051 distributedMapping.cpp:420] save:[2]--[18]--4.94636 18.7869 1.10915 0.0591193 -0.07369 1.31785.
+I0330 10:16:19.143447 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:19.346789 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[18][59] and [0]-[16][43].
+I0330 10:16:19.355934 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:19.
+I0330 10:16:19.544775 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:22.
+I0330 10:16:20.155730 43051 distributedMapping.cpp:386] createOdom:[2][18-19]--[4.94636 18.7869 1.109150.0591193 -0.07369 1.31785],[5.2053 19.8378 1.180750.0629733 -0.0721891 1.31017].
+I0330 10:16:20.155894 43051 distributedMapping.cpp:420] save:[2]--[19]--5.2053 19.8378 1.18075 0.0629733 -0.0721891 1.31017.
+I0330 10:16:20.167151 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:20.344892 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:20.
+I0330 10:16:20.372525 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[19][62] and [0]-[17][46].
+I0330 10:16:20.556452 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:23.
+I0330 10:16:21.141952 43051 distributedMapping.cpp:386] createOdom:[2][19-20]--[5.2053 19.8378 1.180750.0629733 -0.0721891 1.31017],[5.45815 20.8387 1.246430.0652228 -0.0701673 1.29809].
+I0330 10:16:21.142112 43051 distributedMapping.cpp:420] save:[2]--[20]--5.45815 20.8387 1.24643 0.0652228 -0.0701673 1.29809.
+I0330 10:16:21.156136 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:21.348250 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[20][65] and [0]-[17][46].
+I0330 10:16:21.348888 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:21.
+I0330 10:16:21.550050 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:24.
+I0330 10:16:22.132501 43051 distributedMapping.cpp:386] createOdom:[2][20-21]--[5.45815 20.8387 1.246430.0652228 -0.0701673 1.29809],[5.70729 21.8285 1.298870.0656358 -0.0700915 1.28644].
+I0330 10:16:22.132747 43051 distributedMapping.cpp:420] save:[2]--[21]--5.70729 21.8285 1.29887 0.0656358 -0.0700915 1.28644.
+I0330 10:16:22.143925 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:22.332526 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:22.
+I0330 10:16:22.343890 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[21][68] and [0]-[18][49].
+I0330 10:16:22.541134 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:25.
+I0330 10:16:23.141863 43051 distributedMapping.cpp:386] createOdom:[2][21-22]--[5.70729 21.8285 1.298870.0656358 -0.0700915 1.28644],[5.99458 22.8512 1.357940.0677256 -0.0696701 1.27085].
+I0330 10:16:23.142122 43051 distributedMapping.cpp:420] save:[2]--[22]--5.99458 22.8512 1.35794 0.0677256 -0.0696701 1.27085.
+I0330 10:16:23.158031 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:23.350484 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[22][71] and [0]-[19][52].
+I0330 10:16:23.358377 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:23.
+I0330 10:16:23.541025 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:26.
+I0330 10:16:24.126978 43051 distributedMapping.cpp:386] createOdom:[2][22-23]--[5.99458 22.8512 1.357940.0677256 -0.0696701 1.27085],[6.29559 23.864 1.416530.0701761 -0.0693878 1.25839].
+I0330 10:16:24.127149 43051 distributedMapping.cpp:420] save:[2]--[23]--6.29559 23.864 1.41653 0.0701761 -0.0693878 1.25839.
+I0330 10:16:24.138095 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:24.335510 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[23][74] and [0]-[20][55].
+I0330 10:16:24.351819 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:24.
+I0330 10:16:24.551909 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:27.
+I0330 10:16:25.145690 43051 distributedMapping.cpp:386] createOdom:[2][23-24]--[6.29559 23.864 1.416530.0701761 -0.0693878 1.25839],[6.60947 24.8707 1.493880.0706359 -0.0678383 1.24409].
+I0330 10:16:25.145853 43051 distributedMapping.cpp:420] save:[2]--[24]--6.60947 24.8707 1.49388 0.0706359 -0.0678383 1.24409.
+I0330 10:16:25.157263 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:25.346540 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:25.
+I0330 10:16:25.352061 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[24][77] and [0]-[21][58].
+I0330 10:16:25.546279 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:28.
+I0330 10:16:26.140647 43051 distributedMapping.cpp:386] createOdom:[2][24-25]--[6.60947 24.8707 1.493880.0706359 -0.0678383 1.24409],[6.94461 25.881 1.549910.0730558 -0.0684087 1.23116].
+I0330 10:16:26.140911 43051 distributedMapping.cpp:420] save:[2]--[25]--6.94461 25.881 1.54991 0.0730558 -0.0684087 1.23116.
+I0330 10:16:26.151922 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:26.358543 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:26.
+I0330 10:16:26.548450 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:29.
+I0330 10:16:27.145430 43051 distributedMapping.cpp:386] createOdom:[2][25-26]--[6.94461 25.881 1.549910.0730558 -0.0684087 1.23116],[7.25633 26.8789 1.612910.0704463 -0.0671229 1.21659].
+I0330 10:16:27.145591 43051 distributedMapping.cpp:420] save:[2]--[26]--7.25633 26.8789 1.61291 0.0704463 -0.0671229 1.21659.
+I0330 10:16:27.157601 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:27.346352 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[26][83] and [0]-[23][64].
+I0330 10:16:27.352567 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:27.
+I0330 10:16:27.558163 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:30.
+I0330 10:16:28.136652 43051 distributedMapping.cpp:386] createOdom:[2][26-27]--[7.25633 26.8789 1.612910.0704463 -0.0671229 1.21659],[7.58324 27.8453 1.64480.070522 -0.0691655 1.20607].
+I0330 10:16:28.136828 43051 distributedMapping.cpp:420] save:[2]--[27]--7.58324 27.8453 1.6448 0.070522 -0.0691655 1.20607.
+I0330 10:16:28.148450 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:28.349166 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[27][86] and [0]-[24][67].
+I0330 10:16:28.366751 43051 distributedMapping.cpp:15] [globalDescriptorHandler(1)] saveDescriptorAndKey:28.
+I0330 10:16:28.547886 43051 distributedMapping.cpp:15] [globalDescriptorHandler(0)] saveDescriptorAndKey:31.
+I0330 10:16:28.794797 43051 distributedLoopClosure.cpp:58] [loopInfoHandler(0)] add loop 0-24 1-25.
+I0330 10:16:29.180022 43051 distributedMapping.cpp:386] createOdom:[2][27-28]--[7.58324 27.8453 1.64480.070522 -0.0691655 1.20607],[7.91495 28.8071 1.698540.0683292 -0.0704709 1.22317].
+I0330 10:16:29.180207 43051 distributedMapping.cpp:420] save:[2]--[28]--7.91495 28.8071 1.69854 0.0683292 -0.0704709 1.22317.
+I0330 10:16:29.192183 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:29.377453 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[28][89] and [0]-[25][70].
+I0330 10:16:30.162124 43051 distributedMapping.cpp:386] createOdom:[2][28-29]--[7.91495 28.8071 1.698540.0683292 -0.0704709 1.22317],[8.21395 29.9926 1.742450.0551969 -0.0793289 1.39375].
+I0330 10:16:30.162364 43051 distributedMapping.cpp:420] save:[2]--[29]--8.21395 29.9926 1.74245 0.0551969 -0.0793289 1.39375.
+I0330 10:16:30.167781 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:30.256951 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[29][90] and [0]-[26][73].
+I0330 10:16:31.166400 43051 distributedMapping.cpp:386] createOdom:[2][29-30]--[8.21395 29.9926 1.742450.0551969 -0.0793289 1.39375],[8.29387 31.2637 1.811120.0408881 -0.0869333 1.55858].
+I0330 10:16:31.166605 43051 distributedMapping.cpp:420] save:[2]--[30]--8.29387 31.2637 1.81112 0.0408881 -0.0869333 1.55858.
+I0330 10:16:31.172650 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:31.274006 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[30][91] and [0]-[27][76].
+I0330 10:16:32.161895 43051 distributedMapping.cpp:386] createOdom:[2][30-31]--[8.29387 31.2637 1.811120.0408881 -0.0869333 1.55858],[8.25635 32.4846 1.900410.0397473 -0.087455 1.58043].
+I0330 10:16:32.162077 43051 distributedMapping.cpp:420] save:[2]--[31]--8.25635 32.4846 1.90041 0.0397473 -0.087455 1.58043.
+I0330 10:16:32.167793 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:32.267478 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[31][92] and [0]-[27][76].
+I0330 10:16:33.149822 43051 distributedMapping.cpp:386] createOdom:[2][31-32]--[8.25635 32.4846 1.900410.0397473 -0.087455 1.58043],[8.22188 33.6932 1.977360.0406973 -0.0882447 1.57245].
+I0330 10:16:33.149997 43051 distributedMapping.cpp:420] save:[2]--[32]--8.22188 33.6932 1.97736 0.0406973 -0.0882447 1.57245.
+I0330 10:16:33.157095 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:33.241400 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[32][93] and [0]-[28][79].
+I0330 10:16:33.952479 43051 distributedMapping.cpp:386] createOdom:[2][32-33]--[8.22188 33.6932 1.977360.0406973 -0.0882447 1.57245],[8.17815 34.7151 2.050530.0431587 -0.08722 1.54195].
+I0330 10:16:33.952720 43051 distributedMapping.cpp:420] save:[2]--[33]--8.17815 34.7151 2.05053 0.0431587 -0.08722 1.54195.
+I0330 10:16:33.958818 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:34.061642 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[33][94] and [0]-[29][82].
+I0330 10:16:34.761657 43051 distributedMapping.cpp:386] createOdom:[2][33-34]--[8.17815 34.7151 2.050530.0431587 -0.08722 1.54195],[8.20717 35.7188 2.100330.0553218 -0.0785585 1.37307].
+I0330 10:16:34.761831 43051 distributedMapping.cpp:420] save:[2]--[34]--8.20717 35.7188 2.10033 0.0553218 -0.0785585 1.37307.
+I0330 10:16:34.767490 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:34.859766 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[34][95] and [0]-[30][85].
+I0330 10:16:35.760483 43051 distributedMapping.cpp:386] createOdom:[2][34-35]--[8.20717 35.7188 2.100330.0553218 -0.0785585 1.37307],[8.45874 36.894 2.185470.0587443 -0.0773595 1.32363].
+I0330 10:16:35.760654 43051 distributedMapping.cpp:420] save:[2]--[35]--8.45874 36.894 2.18547 0.0587443 -0.0773595 1.32363.
+I0330 10:16:35.765605 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:35.854256 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[35][96] and [0]-[31][88].
+I0330 10:16:36.779316 43051 distributedMapping.cpp:386] createOdom:[2][35-36]--[8.45874 36.894 2.185470.0587443 -0.0773595 1.32363],[8.74948 38.0213 2.229420.0620455 -0.0839986 1.29593].
+I0330 10:16:36.779475 43051 distributedMapping.cpp:420] save:[2]--[36]--8.74948 38.0213 2.22942 0.0620455 -0.0839986 1.29593.
+I0330 10:16:36.784284 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:36.880682 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[36][97] and [0]-[31][88].
+I0330 10:16:37.562410 43051 distributedMapping.cpp:386] createOdom:[2][36-37]--[8.74948 38.0213 2.229420.0620455 -0.0839986 1.29593],[9.0001 39.0219 2.310770.0620271 -0.0783722 1.27706].
+I0330 10:16:37.562660 43051 distributedMapping.cpp:420] save:[2]--[37]--9.0001 39.0219 2.31077 0.0620271 -0.0783722 1.27706.
+I0330 10:16:37.567732 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:37.662873 43186 distributedLoopClosure.cpp:342] [InterLoop<2>] found between [2]-[37][98] and [0]-[31][88].
+I0330 10:16:38.544998 43051 distributedMapping.cpp:386] createOdom:[2][37-38]--[9.0001 39.0219 2.310770.0620271 -0.0783722 1.27706],[9.33559 40.1814 2.387050.0642715 -0.0797446 1.25705].
+I0330 10:16:38.545214 43051 distributedMapping.cpp:420] save:[2]--[38]--9.33559 40.1814 2.38705 0.0642715 -0.0797446 1.25705.
+I0330 10:16:38.553566 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:39.557713 43051 distributedMapping.cpp:386] createOdom:[2][38-39]--[9.33559 40.1814 2.387050.0642715 -0.0797446 1.25705],[9.70763 41.3427 2.457220.065488 -0.0805819 1.23902].
+I0330 10:16:39.557878 43051 distributedMapping.cpp:420] save:[2]--[39]--9.70763 41.3427 2.45722 0.065488 -0.0805819 1.23902.
+I0330 10:16:39.565433 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:40.561827 43051 distributedMapping.cpp:386] createOdom:[2][39-40]--[9.70763 41.3427 2.457220.065488 -0.0805819 1.23902],[10.0612 42.5104 2.535270.0648256 -0.0812403 1.24035].
+I0330 10:16:40.562084 43051 distributedMapping.cpp:420] save:[2]--[40]--10.0612 42.5104 2.53527 0.0648256 -0.0812403 1.24035.
+I0330 10:16:40.569077 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:41.567296 43051 distributedMapping.cpp:386] createOdom:[2][40-41]--[10.0612 42.5104 2.535270.0648256 -0.0812403 1.24035],[10.4467 43.6911 2.617690.0657907 -0.0810202 1.23435].
+I0330 10:16:41.567503 43051 distributedMapping.cpp:420] save:[2]--[41]--10.4467 43.6911 2.61769 0.0657907 -0.0810202 1.23435.
+I0330 10:16:41.572425 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:42.568733 43051 distributedMapping.cpp:386] createOdom:[2][41-42]--[10.4467 43.6911 2.617690.0657907 -0.0810202 1.23435],[10.8311 44.8454 2.682960.0668426 -0.0810626 1.21992].
+I0330 10:16:42.569082 43051 distributedMapping.cpp:420] save:[2]--[42]--10.8311 44.8454 2.68296 0.0668426 -0.0810626 1.21992.
+I0330 10:16:42.573990 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:43.557902 43051 distributedMapping.cpp:386] createOdom:[2][42-43]--[10.8311 44.8454 2.682960.0668426 -0.0810626 1.21992],[11.243 46.0166 2.776450.0697159 -0.0788815 1.17608].
+I0330 10:16:43.558156 43051 distributedMapping.cpp:420] save:[2]--[43]--11.243 46.0166 2.77645 0.0697159 -0.0788815 1.17608.
+I0330 10:16:43.564653 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:44.382867 43051 distributedMapping.cpp:386] createOdom:[2][43-44]--[11.243 46.0166 2.776450.0697159 -0.0788815 1.17608],[11.65 46.9322 2.839770.0779262 -0.0680833 1.04946].
+I0330 10:16:44.383039 43051 distributedMapping.cpp:420] save:[2]--[44]--11.65 46.9322 2.83977 0.0779262 -0.0680833 1.04946.
+I0330 10:16:44.387706 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:45.355715 43051 distributedMapping.cpp:386] createOdom:[2][44-45]--[11.65 46.9322 2.839770.0779262 -0.0680833 1.04946],[12.3151 47.9586 2.935970.0844897 -0.0463481 0.853818].
+I0330 10:16:45.355880 43051 distributedMapping.cpp:420] save:[2]--[45]--12.3151 47.9586 2.93597 0.0844897 -0.0463481 0.853818.
+I0330 10:16:45.362893 43051 distributedMapping.cpp:560] makeDescriptors[2].
+I0330 10:16:46.386475 43051 distributedMapping.cpp:386] createOdom:[2][45-46]--[12.3151 47.9586 2.935970.0844897 -0.0463481 0.853818],[13.1563 48.764 2.956010.0927939 -0.0268276 0.63527].
+I0330 10:16:46.386708 43051 distributedMapping.cpp:420] save:[2]--[46]--13.1563 48.764 2.95601 0.0927939 -0.0268276 0.63527.
+I0330 10:16:46.392129 43051 distributedMapping.cpp:560] makeDescriptors[2].

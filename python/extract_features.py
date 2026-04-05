@@ -312,17 +312,17 @@ def main():
                    help="Voxel size (m) for final accumulated map downsampling (0=off)")
 
     # LiDAR configuration
-    p.add_argument("--n-scan", type=int, default=16,
+    p.add_argument("--n-scan", type=int, default=32,
                    help="Number of LiDAR rings")
     p.add_argument("--horizon-scan", type=int, default=1800,
                    help="Horizontal resolution")
-    p.add_argument("--min-range", type=float, default=1.0,
+    p.add_argument("--min-range", type=float, default=20.0,
                    help="Minimum range filter (m)")
     p.add_argument("--max-range", type=float, default=1000.0,
                    help="Maximum range filter (m)")
 
     # LOAM thresholds
-    p.add_argument("--edge-threshold", type=float, default=1.0,
+    p.add_argument("--edge-threshold", type=float, default=25.0,
                    help="Min curvature for corner features")
     p.add_argument("--surf-threshold", type=float, default=0.1,
                    help="Max curvature for surface features")
@@ -446,27 +446,27 @@ def main():
     # ── Visualize ─────────────────────────────────────────────────────────
     plotter = pv.Plotter()
 
-    if len(other_pts) > 0:
-        cloud = pv.PolyData(other_pts)
-        plotter.add_mesh(cloud, color=[0.5, 0.5, 0.5],
-                         point_size=args.point_size * 0.5,
-                         render_points_as_spheres=False,
-                         opacity=0.3,
-                         label=f"Other ({len(other_pts):,})")
-
-    # if len(surface_pts) > 0:
-    #     cloud = pv.PolyData(surface_pts)
-    #     plotter.add_mesh(cloud, color=[0.2, 0.6, 1.0],
-    #                      point_size=args.point_size,
+    # if len(other_pts) > 0:
+    #     cloud = pv.PolyData(other_pts)
+    #     plotter.add_mesh(cloud, color=[0.5, 0.5, 0.5],
+    #                      point_size=args.point_size * 0.5,
     #                      render_points_as_spheres=False,
-    #                      label=f"Surface ({len(surface_pts):,})")
+    #                      opacity=0.3,
+    #                      label=f"Other ({len(other_pts):,})")
 
-    if len(corner_pts) > 0:
-        cloud = pv.PolyData(corner_pts)
-        plotter.add_mesh(cloud, color=[1.0, 0.2, 0.2],
-                         point_size=args.point_size * 1.5,
+    if len(surface_pts) > 0:
+        cloud = pv.PolyData(surface_pts)
+        plotter.add_mesh(cloud, color=[0.2, 0.6, 1.0],
+                         point_size=args.point_size,
                          render_points_as_spheres=False,
-                         label=f"Corner ({len(corner_pts):,})")
+                         label=f"Surface ({len(surface_pts):,})")
+
+    # if len(corner_pts) > 0:
+    #     cloud = pv.PolyData(corner_pts)
+    #     plotter.add_mesh(cloud, color=[1.0, 0.2, 0.2],
+    #                      point_size=args.point_size * 1.5,
+    #                      render_points_as_spheres=False,
+    #                      label=f"Corner ({len(corner_pts):,})")
 
     plotter.add_legend(bcolor=(0.9, 0.9, 0.9), face=None)
     plotter.set_background("white")

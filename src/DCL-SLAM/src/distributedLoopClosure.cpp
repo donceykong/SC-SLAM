@@ -1,4 +1,5 @@
 #include "distributedMapping.h"
+#include "labelAwareRegistration.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	class distributedMapping: handle message callback
@@ -30,8 +31,11 @@ void distributedMapping::loopInfoHandler(
 		// filtered pointcloud
 		pcl::PointCloud<PointPose3D>::Ptr cloudTemp(new pcl::PointCloud<PointPose3D>());
 		*cloudTemp = robots[id_].keyframe_cloud_array[loop_msg.index0];
-		downsample_filter_for_inter_loop2.setInputCloud(cloudTemp);
-		downsample_filter_for_inter_loop2.filter(*cloudTemp);
+		{
+			pcl::PointCloud<PointPose3D> ds;
+			voxelDownsampleModeLabel(*cloudTemp, ds, map_leaf_size_);
+			*cloudTemp = std::move(ds);
+		}
 		pcl::toROSMsg(*cloudTemp, loop_msg.scan_cloud);
 		// relative pose
 		loop_msg.pose0 = gtsamPoseToTransform(pclPointTogtsamPose3(keyposes_cloud_6d->points[loop_msg.index0]));
@@ -155,16 +159,23 @@ int distributedMapping::detectLoopClosureDistance(
 
 void distributedMapping::performIntraLoopClosure()
 {
-	if(keyframe_descriptor->getSize(id_) <= intra_robot_loop_ptr || !intra_robot_loop_closure_enable_)
+	int my_ptr;
+	std::pair<int, float> matching_result;
 	{
-		return;
+		std::lock_guard<std::mutex> kf_lock(keyframe_descriptor_mutex_);
+		if(keyframe_descriptor->getSize(id_) <= intra_robot_loop_ptr || !intra_robot_loop_closure_enable_)
+		{
+			return;
+		}
+		// Advance the pointer BEFORE calling into the descriptor so that
+		// a thrown exception (cv::Exception from lidar-iris, etc.) doesn't
+		// trap us replaying the same bad index forever.
+		my_ptr = intra_robot_loop_ptr;
+		intra_robot_loop_ptr++;
+		matching_result = keyframe_descriptor->detectIntraLoopClosureID(my_ptr);
 	}
-
-	// find intra loop closure with global descriptor
-	auto matching_result = keyframe_descriptor->detectIntraLoopClosureID(intra_robot_loop_ptr);
-	int loop_key0 = intra_robot_loop_ptr;
+	int loop_key0 = my_ptr;
 	int loop_key1 = matching_result.first;
-	intra_robot_loop_ptr++;
 
 	if(matching_result.first < 0) // no loop found
 	{
@@ -190,13 +201,11 @@ void distributedMapping::calculateTransformation(
 	pcl::PointCloud<PointPose3D>::Ptr scan_cloud(new pcl::PointCloud<PointPose3D>());
 	pcl::PointCloud<PointPose3D>::Ptr scan_cloud_ds(new pcl::PointCloud<PointPose3D>());
 	loopFindNearKeyframes(scan_cloud, loop_key0, 0);
-	downsample_filter_for_intra_loop.setInputCloud(scan_cloud);
-	downsample_filter_for_intra_loop.filter(*scan_cloud_ds);
+	voxelDownsampleModeLabel(*scan_cloud, *scan_cloud_ds, map_leaf_size_);
 	pcl::PointCloud<PointPose3D>::Ptr map_cloud(new pcl::PointCloud<PointPose3D>());
 	pcl::PointCloud<PointPose3D>::Ptr map_cloud_ds(new pcl::PointCloud<PointPose3D>());
 	loopFindNearKeyframes(map_cloud, loop_key1, history_keyframe_search_num_);
-	downsample_filter_for_intra_loop.setInputCloud(map_cloud);
-	downsample_filter_for_intra_loop.filter(*map_cloud_ds);
+	voxelDownsampleModeLabel(*map_cloud, *map_cloud_ds, map_leaf_size_);
 
 	// fail safe check for cloud
 	if(scan_cloud->size() < 300 || map_cloud->size() < 1000)
@@ -223,14 +232,29 @@ void distributedMapping::calculateTransformation(
 		pub_map_of_scan2map->publish(map_cloud_msg);
 	}
 
-	// icp settings
-	static pcl::IterativeClosestPoint<PointPose3D, PointPose3D> icp;
+	// icp settings — note: NOT static here. The label-aware rejector must be
+	// re-bound to the current source/target clouds per call, so we use a
+	// per-call icp instance (cost vs. construction is negligible compared to
+	// alignment).
+	pcl::IterativeClosestPoint<PointPose3D, PointPose3D> icp;
 	icp.setMaxCorrespondenceDistance(2*search_radius_);
 	icp.setMaximumIterations(50);
 	icp.setTransformationEpsilon(1e-6);
 	icp.setEuclideanFitnessEpsilon(1e-6);
-	icp.setRANSACIterations(0);
-	// icp.setRANSACOutlierRejectionThreshold(ransac_outlier_reject_threshold_);
+	// [#3] Enable RANSAC outlier rejection for intra-robot ICP, mirroring the
+	// inter-robot path (performExternLoopClosure). A false-positive intra match
+	// now feeds the *shared* Track-2 optimization, so it must be screened the
+	// same way inter-robot loops are.
+	icp.setRANSACIterations(ransac_maximum_iteration_);
+	icp.setRANSACOutlierRejectionThreshold(ransac_outlier_reject_threshold_);
+
+	// Label-aware geometric verification: drop correspondences whose source
+	// and target labels disagree. Voxel downsampling above used the mode
+	// label, so labels are canonical (not averaged) at this point.
+	auto label_rej = std::make_shared<LabelMatchRejector>();
+	label_rej->setInputSource(scan_cloud_ds);
+	label_rej->setInputTarget(map_cloud_ds);
+	icp.addCorrespondenceRejector(label_rej);
 
 	// align clouds
 	icp.setInputSource(scan_cloud_ds);
@@ -273,11 +297,18 @@ void distributedMapping::calculateTransformation(
 	noiseModel::Diagonal::shared_ptr loop_noise = noiseModel::Diagonal::Variances(vector6);
 	NonlinearFactor::shared_ptr factor(new BetweenFactor<Pose3>(
 		Symbol('a'+id_, loop_key0), Symbol('a'+id_, loop_key1), pose_between, loop_noise));
-	isam2_graph.add(factor);
+	// [D+A] Intentionally do NOT add the intra-robot loop to local ISAM2
+	// (isam2_graph) and do NOT set intra_robot_loop_close_flag. Track 1 (local
+	// ISAM2 -> keyposes_cloud_* / getLatestEstimate) feeds LIO-SAM's real-time
+	// scan-matching recursion; a loop correction there teleports the front-end
+	// and, in multi-robot, lands in the wrong (un-anchored) frame. The loop is
+	// still added to local_pose_graph (Track 2): the distributed optimizer +
+	// anchor/prior_owner incorporate it into the anchored global estimate, which
+	// is what publishTransformation()/publishGlobalMap()/global_path use. The
+	// front-end inherits the correction via the existing world->odom TF.
 	local_pose_graph->add(factor);
 	local_pose_graph_no_filtering->add(factor);
 	sent_start_optimization_flag = true; // enable distributed mapping
-	intra_robot_loop_close_flag = true;
 
 	// save loop factor in local map (for PCM)
 	auto new_factor = boost::dynamic_pointer_cast<BetweenFactor<Pose3>>(factor);
@@ -319,20 +350,30 @@ void distributedMapping::loopFindNearKeyframes(
 
 void distributedMapping::performInterLoopClosure()
 {
-	// early return
-	if(keyframe_descriptor->getSize() <= inter_robot_loop_ptr || !inter_robot_loop_closure_enable_)
+	int my_ptr;
+	std::pair<int, float> matching_result;
+	int loop_robot0, loop_robot1, loop_key0, loop_key1;
 	{
-		return;
-	}
+		std::lock_guard<std::mutex> kf_lock(keyframe_descriptor_mutex_);
+		// early return
+		if(keyframe_descriptor->getSize() <= inter_robot_loop_ptr || !inter_robot_loop_closure_enable_)
+		{
+			return;
+		}
+		// Advance the pointer BEFORE calling into the descriptor so a
+		// thrown exception (cv::Exception from lidar-iris, etc.) doesn't
+		// trap us replaying the same bad index forever.
+		my_ptr = inter_robot_loop_ptr;
+		inter_robot_loop_ptr++;
 
-	// Place Recognition: find candidates with global descriptor
-	auto matching_result = keyframe_descriptor->detectInterLoopClosureID(inter_robot_loop_ptr);
-	int loop_robot0 = keyframe_descriptor->getIndex(inter_robot_loop_ptr).first;
-	int loop_robot1 = keyframe_descriptor->getIndex(matching_result.first).first;
-	int loop_key0 = keyframe_descriptor->getIndex(inter_robot_loop_ptr).second;
-	int loop_key1 = keyframe_descriptor->getIndex(matching_result.first).second;
+		// Place Recognition: find candidates with global descriptor
+		matching_result = keyframe_descriptor->detectInterLoopClosureID(my_ptr);
+		loop_robot0 = keyframe_descriptor->getIndex(my_ptr).first;
+		loop_robot1 = keyframe_descriptor->getIndex(matching_result.first).first;
+		loop_key0   = keyframe_descriptor->getIndex(my_ptr).second;
+		loop_key1   = keyframe_descriptor->getIndex(matching_result.first).second;
+	}
 	float init_yaw = matching_result.second;
-	inter_robot_loop_ptr++;
 
 	if(matching_result.first < 0) // no loop found
 	{
@@ -340,7 +381,7 @@ void distributedMapping::performInterLoopClosure()
 	}
 
 	LOG(INFO) << "[InterLoop<" << id_ << ">] found between ["
-		<< loop_robot0 << "]-[" << loop_key0 << "][" << inter_robot_loop_ptr-1 << "] and ["
+		<< loop_robot0 << "]-[" << loop_key0 << "][" << my_ptr << "] and ["
 		<< loop_robot1 << "]-[" << loop_key1 << "][" << matching_result.first << "]." << endl;
 
 	dcl_slam::msg::LoopInfo inter_loop_candidate;
@@ -362,8 +403,7 @@ void distributedMapping::performInterLoopClosure()
 		pcl::PointCloud<PointPose3D>::Ptr scan_cloud(new pcl::PointCloud<PointPose3D>());
 		pcl::PointCloud<PointPose3D>::Ptr scan_cloud_ds(new pcl::PointCloud<PointPose3D>());
 		*scan_cloud = robots[loop_robot0].keyframe_cloud_array[loop_key0];
-		downsample_filter_for_inter_loop3.setInputCloud(scan_cloud);
-		downsample_filter_for_inter_loop3.filter(*scan_cloud_ds);
+		voxelDownsampleModeLabel(*scan_cloud, *scan_cloud_ds, map_leaf_size_);
 		pcl::toROSMsg(*scan_cloud_ds, inter_loop_candidate.scan_cloud);
 		inter_loop_candidate.pose0 = gtsamPoseToTransform(pclPointTogtsamPose3(keyposes_cloud_6d->points[loop_key0]));
 	}
@@ -441,8 +481,7 @@ void distributedMapping::performExternLoopClosure()
 	pcl::PointCloud<PointPose3D>::Ptr map_cloud(new pcl::PointCloud<PointPose3D>());
 	pcl::PointCloud<PointPose3D>::Ptr map_cloud_ds(new pcl::PointCloud<PointPose3D>());
 	loopFindGlobalNearKeyframes(map_cloud, inter_loop.index1, history_keyframe_search_num_);
-	downsample_filter_for_inter_loop.setInputCloud(map_cloud); // downsample near keyframes
-	downsample_filter_for_inter_loop.filter(*map_cloud_ds);
+	voxelDownsampleModeLabel(*map_cloud, *map_cloud_ds, map_leaf_size_);
 
 	// safe check for cloud
 	if (scan_cloud_ds->size() < 300 || map_cloud_ds->size() < 1000)
@@ -475,14 +514,21 @@ void distributedMapping::performExternLoopClosure()
 	}
 
 	/*** calculate transform using icp ***/
-	// ICP Settings
-	static pcl::IterativeClosestPoint<PointPose3D, PointPose3D> icp;
+	// ICP Settings — per-call instance so the LabelMatchRejector binds to
+	// these specific source/target clouds.
+	pcl::IterativeClosestPoint<PointPose3D, PointPose3D> icp;
 	icp.setMaxCorrespondenceDistance(30);
 	icp.setMaximumIterations(100);
 	icp.setTransformationEpsilon(1e-6);
 	icp.setEuclideanFitnessEpsilon(1e-6);
 	icp.setRANSACIterations(ransac_maximum_iteration_);
 	icp.setRANSACOutlierRejectionThreshold(ransac_outlier_reject_threshold_);
+
+	// Label-aware geometric verification on the inter-robot ICP.
+	auto label_rej_icp = std::make_shared<LabelMatchRejector>();
+	label_rej_icp->setInputSource(scan_cloud_ds);
+	label_rej_icp->setInputTarget(map_cloud_ds);
+	icp.addCorrespondenceRejector(label_rej_icp);
 
 	// Align clouds
 	icp.setInputSource(scan_cloud_ds);
@@ -498,6 +544,18 @@ void distributedMapping::performExternLoopClosure()
 	correspondence_estimation.setInputCloud(correct_scan_cloud_ds);
 	correspondence_estimation.setInputTarget(map_cloud_ds);
 	correspondence_estimation.determineCorrespondences(*correspondences);
+
+	// Label-aware filtering of correspondences before RANSAC. (After ICP the
+	// scan cloud was transformed; labels survive transformPointCloud per the
+	// fix in paramsServer.cpp.)
+	{
+		LabelMatchRejector label_rej_explicit;
+		label_rej_explicit.setInputSource(correct_scan_cloud_ds);
+		label_rej_explicit.setInputTarget(map_cloud_ds);
+		pcl::Correspondences filtered;
+		label_rej_explicit.getRemainingCorrespondences(*correspondences, filtered);
+		*correspondences = std::move(filtered);
+	}
 
 	// RANSAC matching to find inlier
 	pcl::Correspondences new_correspondences;
@@ -567,32 +625,40 @@ void distributedMapping::performExternLoopClosure()
 		Symbol('a'+inter_loop.robot0, inter_loop.index0),
 		Symbol('a'+inter_loop.robot1, inter_loop.index1),
 		pose_between, loop_noise));
-	adjacency_matrix(inter_loop.robot1, inter_loop.robot0) += 1;
-	adjacency_matrix(inter_loop.robot0, inter_loop.robot1) += 1;
-	local_pose_graph->add(factor);
-	local_pose_graph_no_filtering->add(factor);
-	sent_start_optimization_flag = true; // enable distributed mapping
 
-	// update pose estimate (for PCM)
-	Key key;
-	graph_utils::PoseWithCovariance pose;
-	pose.covariance_matrix = loop_noise->covariance();
-	pose.pose = transformToGtsamPose(inter_loop.pose1);
-	key = loop_symbol1.key();
-	updatePoseEstimateFromNeighbor(inter_loop.robot1, key, pose);
-	pose.pose = transformToGtsamPose(inter_loop.pose0);
-	key = loop_symbol0.key();
-	updatePoseEstimateFromNeighbor(inter_loop.robot0, key, pose);
+	// Commit all shared-state mutations under graph_mutex_. Otherwise
+	// local_pose_graph->add races with the executor's outliersFiltering
+	// vector::at() iteration / performDistributedMapping push_back.
+	{
+		std::lock_guard<std::mutex> graph_lock(graph_mutex_);
+		adjacency_matrix(inter_loop.robot1, inter_loop.robot0) += 1;
+		adjacency_matrix(inter_loop.robot0, inter_loop.robot1) += 1;
+		local_pose_graph->add(factor);
+		local_pose_graph_no_filtering->add(factor);
+		sent_start_optimization_flag = true; // enable distributed mapping
 
-	// add transform to local map (for PCM)
-	auto new_factor = boost::dynamic_pointer_cast<BetweenFactor<Pose3>>(factor);
-	Matrix covariance_matrix = loop_noise->covariance();
-	robot_local_map.addTransform(*new_factor, covariance_matrix);
+		// update pose estimate (for PCM)
+		Key key;
+		graph_utils::PoseWithCovariance pose;
+		pose.covariance_matrix = loop_noise->covariance();
+		pose.pose = transformToGtsamPose(inter_loop.pose1);
+		key = loop_symbol1.key();
+		updatePoseEstimateFromNeighbor(inter_loop.robot1, key, pose);
+		pose.pose = transformToGtsamPose(inter_loop.pose0);
+		key = loop_symbol0.key();
+		updatePoseEstimateFromNeighbor(inter_loop.robot0, key, pose);
 
-	// publish loop closure
+		// add transform to local map (for PCM)
+		auto new_factor = boost::dynamic_pointer_cast<BetweenFactor<Pose3>>(factor);
+		Matrix covariance_matrix = loop_noise->covariance();
+		robot_local_map.addTransform(*new_factor, covariance_matrix);
+
+		loop_indexes.emplace(make_pair(loop_symbol0, loop_symbol1));
+		loop_indexes.emplace(make_pair(loop_symbol1, loop_symbol0));
+	}
+
+	// publish outside the lock (no shared-state mutation)
 	robots[id_].pub_loop_info->publish(inter_loop);
-	loop_indexes.emplace(make_pair(loop_symbol0, loop_symbol1));
-	loop_indexes.emplace(make_pair(loop_symbol1, loop_symbol0));
 }
 
 void distributedMapping::loopFindGlobalNearKeyframes(
@@ -685,20 +751,25 @@ void distributedMapping::loopClosureThread()
 	{
 		rate.sleep();
 
+		const char* stage = "(none)";
 		try {
+			stage = "performRSIntraLoopClosure";
 			performRSIntraLoopClosure(); // find intra-loop with radius search
 
+			stage = "performIntraLoopClosure";
 			performIntraLoopClosure(); // find intra-loop with descriptor
 
+			stage = "performInterLoopClosure";
 			performInterLoopClosure(); // find inter-loop with descriptor
 
+			stage = "performExternLoopClosure";
 			performExternLoopClosure(); // verify all inter-loop here
 		} catch (const cv::Exception& e) {
-			LOG(ERROR) << "loopClosureThread cv::Exception: " << e.what();
-			RCLCPP_ERROR(node_->get_logger(), "loopClosureThread cv::Exception: %s", e.what());
+			LOG(ERROR) << "loopClosureThread[" << stage << "] cv::Exception: " << e.what();
+			RCLCPP_ERROR(node_->get_logger(), "loopClosureThread[%s] cv::Exception: %s", stage, e.what());
 		} catch (const std::exception& e) {
-			LOG(ERROR) << "loopClosureThread exception: " << e.what();
-			RCLCPP_ERROR(node_->get_logger(), "loopClosureThread exception: %s", e.what());
+			LOG(ERROR) << "loopClosureThread[" << stage << "] exception: " << e.what();
+			RCLCPP_ERROR(node_->get_logger(), "loopClosureThread[%s] exception: %s", stage, e.what());
 		}
 	}
 }

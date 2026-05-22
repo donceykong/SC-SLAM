@@ -58,7 +58,11 @@
 
 using namespace std;
 
-typedef pcl::PointXYZI PointType;
+// PointType is shared with DCL-SLAM as PointPose3D so labels flow between
+// packages without type mismatches. See paramsServer.h for the PointXYZIL
+// struct + registration.
+#include "paramsServer.h"
+typedef PointPose3D PointType;
 
 enum class SensorType { VELODYNE, OUSTER, LIVOX };
 

@@ -115,6 +115,9 @@ distributedMapping::distributedMapping(rclcpp::Node* node) : paramsServer(node)
 	// global map visualization
 	pub_global_map = node_->create_publisher<sensor_msgs::msg::PointCloud2>(
 		"distributedMapping/globalMap", qos_reliable(1));
+	// global map with per-point RGB derived from semantic label (for RViz)
+	pub_global_map_rgb = node_->create_publisher<sensor_msgs::msg::PointCloud2>(
+		"distributedMapping/globalMapRGB", qos_reliable(1));
 	// path for independent robot
 	pub_global_path = node_->create_publisher<nav_msgs::msg::Path>(
 		"distributedMapping/path", qos_reliable(1));
@@ -133,6 +136,12 @@ distributedMapping::distributedMapping(rclcpp::Node* node) : paramsServer(node)
 	downsample_filter_for_inter_loop.setLeafSize(map_leaf_size_, map_leaf_size_, map_leaf_size_);
 	downsample_filter_for_inter_loop2.setLeafSize(map_leaf_size_, map_leaf_size_, map_leaf_size_);
 	downsample_filter_for_inter_loop3.setLeafSize(map_leaf_size_, map_leaf_size_, map_leaf_size_);
+	// Carry non-xyz fields (semantic label) through voxel downsampling.
+	downsample_filter_for_descriptor.setDownsampleAllData(true);
+	downsample_filter_for_intra_loop.setDownsampleAllData(true);
+	downsample_filter_for_inter_loop.setDownsampleAllData(true);
+	downsample_filter_for_inter_loop2.setDownsampleAllData(true);
+	downsample_filter_for_inter_loop3.setDownsampleAllData(true);
 
 	/*** mutex ***/
 	// lock_on_call = vector<mutex>(number_of_robots_);
@@ -263,7 +272,27 @@ distributedMapping::distributedMapping(rclcpp::Node* node) : paramsServer(node)
 
 distributedMapping::~distributedMapping()
 {
-
+	// On node teardown, dump this robot's optimized trajectory in TUM format
+	// (timestamp tx ty tz qx qy qz qw, one line per keyframe). Path:
+	//   /tmp/dcl_output/trajectory_robot<id>.tum
+	// The output dir is created up-front by the launch file. Wrapped in a
+	// try/catch so a failure here can never abort destruction.
+	try
+	{
+		const std::string out_path =
+			"/tmp/dcl_output/trajectory_robot" + std::to_string(id_) + ".tum";
+		saveTrajectoryTUM(out_path);
+	}
+	catch (const std::exception& e)
+	{
+		LOG(WARNING) << "[~distributedMapping<" << id_ << ">] saveTrajectoryTUM failed: "
+			<< e.what() << std::endl;
+	}
+	catch (...)
+	{
+		LOG(WARNING) << "[~distributedMapping<" << id_ << ">] saveTrajectoryTUM failed (unknown)."
+			<< std::endl;
+	}
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

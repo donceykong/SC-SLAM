@@ -17,16 +17,31 @@ def generate_launch_description():
     fastdds_profile = os.path.join(dcl_slam_share, 'config', 'fastdds_profile.xml')
     set_fastdds = SetEnvironmentVariable('FASTRTPS_DEFAULT_PROFILES_FILE', fastdds_profile)
 
-    # Per-robot bag paths
-    bag_base = '/media/donceykong/doncey_ssd_03/datasets/cu_multi/main_campus'
+    # Per-robot bag paths. Lidar uses the *_with_semantics bags produced by
+    # extra_scripts/add_semantics_to_trimmed_bag.py (adds a uint16 `label`
+    # PointField per scan). IMU/GPS bags are the original trimmed bags
+    # (semantics pipeline does not touch them).
+    bag_base = '/media/donceykong/donceys_data_ssd/datasets/CU_MULTI/main_campus/trimmed/'
 
     # Declare arguments
-    bag_path_robot1_arg = DeclareLaunchArgument('bag_path_robot1',
-        default_value=os.path.join(bag_base, 'robot1', 'robot1_main_campus_lidar_imu_gps'),
-        description='Path to robot1 ROS2 bag')
-    bag_path_robot2_arg = DeclareLaunchArgument('bag_path_robot2',
-        default_value=os.path.join(bag_base, 'robot2', 'robot2_main_campus_lidar_imu_gps'),
-        description='Path to robot2 ROS2 bag')
+    bag_path_robot1_lidar_arg = DeclareLaunchArgument('bag_path_robot1_lidar',
+        default_value=os.path.join(bag_base, 'robot1', 'robot1_main_campus_lidar_trimmed_with_semantics'),
+        description='Path to robot1 trimmed lidar bag (with semantic label field)')
+    bag_path_robot1_imu_gps_arg = DeclareLaunchArgument('bag_path_robot1_imu_gps',
+        default_value=os.path.join(bag_base, 'robot1', 'robot1_main_campus_imu_gps_trimmed'),
+        description='Path to robot1 trimmed imu_gps bag')
+    bag_path_robot2_lidar_arg = DeclareLaunchArgument('bag_path_robot2_lidar',
+        default_value=os.path.join(bag_base, 'robot2', 'robot2_main_campus_lidar_trimmed_with_semantics'),
+        description='Path to robot2 trimmed lidar bag (with semantic label field)')
+    bag_path_robot2_imu_gps_arg = DeclareLaunchArgument('bag_path_robot2_imu_gps',
+        default_value=os.path.join(bag_base, 'robot2', 'robot2_main_campus_imu_gps_trimmed'),
+        description='Path to robot2 trimmed imu_gps bag')
+    bag_path_robot3_lidar_arg = DeclareLaunchArgument('bag_path_robot3_lidar',
+        default_value=os.path.join(bag_base, 'robot3', 'robot3_main_campus_lidar_trimmed_with_semantics'),
+        description='Path to robot3 trimmed lidar bag (with semantic label field)')
+    bag_path_robot3_imu_gps_arg = DeclareLaunchArgument('bag_path_robot3_imu_gps',
+        default_value=os.path.join(bag_base, 'robot3', 'robot3_main_campus_imu_gps_trimmed'),
+        description='Path to robot3 trimmed imu_gps bag')
     bag_rate_arg = DeclareLaunchArgument('bag_rate', default_value='1.0',
         description='Bag playback rate')
     bag_delay_arg = DeclareLaunchArgument('bag_delay', default_value='8.0',
@@ -43,6 +58,17 @@ def generate_launch_description():
         name='dcl_slam_loopVisualizationNode',
         output='screen',
         parameters=[{'number_of_robots': 3, 'use_sim_time': True}],
+    )
+
+    # RViz with the CU-MULTI display config
+    rviz_config = os.path.join(dcl_slam_share, 'rviz', 'cu_multi.rviz')
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config],
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+        output='screen',
     )
 
     # Single UGV launch file path (CU-Multi variant)
@@ -75,23 +101,41 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Parallel per-robot bag playback:
-    #   Robot 1 is the clock source (--clock 100)
-    #   Robot 2 does NOT publish clock (paces via --rate against wall time)
-    #   Each player only reads its own robot's data from a separate bag file,
-    #   eliminating the single-process I/O bottleneck.
-    bag_play_robot1 = TimerAction(
+    # Parallel per-robot bag playback (lidar = *_with_semantics, imu_gps = trimmed):
+    #   Robot 1 lidar is the clock source (--clock 100)
+    #   All other players do NOT publish clock
+    #   Each robot has separate lidar and imu_gps bag players
+
+    # Robot 1 lidar (clock source)
+    bag_play_robot1_lidar = TimerAction(
         period=LaunchConfiguration('bag_delay'),
         actions=[
             ExecuteProcess(
                 cmd=[
                     'ros2', 'bag', 'play',
-                    LaunchConfiguration('bag_path_robot1'),
+                    LaunchConfiguration('bag_path_robot1_lidar'),
                     '--rate', LaunchConfiguration('bag_rate'),
                     '--clock', '100',
                     '--start-offset', LaunchConfiguration('bag_start'),
                     '--remap',
                     '/robot1/ouster/points:=/a/ouster/points',
+                ],
+                output='screen',
+            ),
+        ],
+    )
+
+    # Robot 1 imu_gps
+    bag_play_robot1_imu_gps = TimerAction(
+        period=LaunchConfiguration('bag_delay'),
+        actions=[
+            ExecuteProcess(
+                cmd=[
+                    'ros2', 'bag', 'play',
+                    LaunchConfiguration('bag_path_robot1_imu_gps'),
+                    '--rate', LaunchConfiguration('bag_rate'),
+                    '--start-offset', LaunchConfiguration('bag_start'),
+                    '--remap',
                     '/robot1/imu/data:=/a/imu/data',
                 ],
                 output='screen',
@@ -99,18 +143,72 @@ def generate_launch_description():
         ],
     )
 
-    bag_play_robot2 = TimerAction(
+    # Robot 2 lidar
+    bag_play_robot2_lidar = TimerAction(
         period=LaunchConfiguration('bag_delay'),
         actions=[
             ExecuteProcess(
                 cmd=[
                     'ros2', 'bag', 'play',
-                    LaunchConfiguration('bag_path_robot2'),
+                    LaunchConfiguration('bag_path_robot2_lidar'),
                     '--rate', LaunchConfiguration('bag_rate'),
                     '--start-offset', LaunchConfiguration('bag_start'),
                     '--remap',
                     '/robot2/ouster/points:=/b/ouster/points',
+                ],
+                output='screen',
+            ),
+        ],
+    )
+
+    # Robot 2 imu_gps
+    bag_play_robot2_imu_gps = TimerAction(
+        period=LaunchConfiguration('bag_delay'),
+        actions=[
+            ExecuteProcess(
+                cmd=[
+                    'ros2', 'bag', 'play',
+                    LaunchConfiguration('bag_path_robot2_imu_gps'),
+                    '--rate', LaunchConfiguration('bag_rate'),
+                    '--start-offset', LaunchConfiguration('bag_start'),
+                    '--remap',
                     '/robot2/imu/data:=/b/imu/data',
+                ],
+                output='screen',
+            ),
+        ],
+    )
+
+    # Robot 3 lidar
+    bag_play_robot3_lidar = TimerAction(
+        period=LaunchConfiguration('bag_delay'),
+        actions=[
+            ExecuteProcess(
+                cmd=[
+                    'ros2', 'bag', 'play',
+                    LaunchConfiguration('bag_path_robot3_lidar'),
+                    '--rate', LaunchConfiguration('bag_rate'),
+                    '--start-offset', LaunchConfiguration('bag_start'),
+                    '--remap',
+                    '/robot3/ouster/points:=/c/ouster/points',
+                ],
+                output='screen',
+            ),
+        ],
+    )
+
+    # Robot 3 imu_gps
+    bag_play_robot3_imu_gps = TimerAction(
+        period=LaunchConfiguration('bag_delay'),
+        actions=[
+            ExecuteProcess(
+                cmd=[
+                    'ros2', 'bag', 'play',
+                    LaunchConfiguration('bag_path_robot3_imu_gps'),
+                    '--rate', LaunchConfiguration('bag_rate'),
+                    '--start-offset', LaunchConfiguration('bag_start'),
+                    '--remap',
+                    '/robot3/imu/data:=/c/imu/data',
                 ],
                 output='screen',
             ),
@@ -119,16 +217,25 @@ def generate_launch_description():
 
     return LaunchDescription([
         set_fastdds,
-        bag_path_robot1_arg,
-        bag_path_robot2_arg,
+        bag_path_robot1_lidar_arg,
+        bag_path_robot1_imu_gps_arg,
+        bag_path_robot2_lidar_arg,
+        bag_path_robot2_imu_gps_arg,
+        bag_path_robot3_lidar_arg,
+        bag_path_robot3_imu_gps_arg,
         bag_rate_arg,
         bag_delay_arg,
         bag_start_arg,
         use_sim_time_arg,
         loop_vis_node,
+        rviz_node,
         robot_a,
         robot_b,
         robot_c,
-        bag_play_robot1,
-        bag_play_robot2,
+        bag_play_robot1_lidar,
+        bag_play_robot1_imu_gps,
+        bag_play_robot2_lidar,
+        bag_play_robot2_imu_gps,
+        bag_play_robot3_lidar,
+        bag_play_robot3_imu_gps,
     ])

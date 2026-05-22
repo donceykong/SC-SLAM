@@ -7,11 +7,12 @@ struct VelodynePointXYZIRT
     PCL_ADD_INTENSITY;
     uint16_t ring;
     float time;
+    uint16_t label;
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 POINT_CLOUD_REGISTER_POINT_STRUCT (VelodynePointXYZIRT,
     (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
-    (uint16_t, ring, ring) (float, time, time)
+    (uint16_t, ring, ring) (float, time, time) (uint16_t, label, label)
 )
 
 struct OusterPointXYZIRT {
@@ -22,12 +23,14 @@ struct OusterPointXYZIRT {
     uint8_t ring;
     uint16_t noise;
     uint32_t range;
+    uint16_t label;
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 POINT_CLOUD_REGISTER_POINT_STRUCT(OusterPointXYZIRT,
     (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
     (uint32_t, t, t) (uint16_t, reflectivity, reflectivity)
     (uint8_t, ring, ring) (uint16_t, noise, noise) (uint32_t, range, range)
+    (uint16_t, label, label)
 )
 
 // Use the Velodyne point format as a common representation
@@ -91,9 +94,9 @@ public:
     ImageProjection() : ParamServer("image_projection_node"),
     deskewFlag(0)
     {
-        subImu        = create_subscription<sensor_msgs::msg::Imu>(imuTopic, qos_imu(),
+        subImu = create_subscription<sensor_msgs::msg::Imu>(imuTopic, qos_imu(),
                             std::bind(&ImageProjection::imuHandler, this, std::placeholders::_1));
-        subOdom       = create_subscription<nav_msgs::msg::Odometry>(odomTopic+"_incremental", qos_imu(),
+        subOdom = create_subscription<nav_msgs::msg::Odometry>(odomTopic+"_incremental", qos_imu(),
                             std::bind(&ImageProjection::odometryHandler, this, std::placeholders::_1));
         subLaserCloud = create_subscription<sensor_msgs::msg::PointCloud2>(pointCloudTopic, qos_lidar(),
                             std::bind(&ImageProjection::cloudHandler, this, std::placeholders::_1));
@@ -210,6 +213,7 @@ public:
                 dst.intensity = src.intensity;
                 dst.ring = src.ring;
                 dst.time = src.t * 1e-9f;
+                dst.label = src.label;
             }
         }
         else
@@ -515,6 +519,7 @@ public:
             thisPoint.y = laserCloudIn->points[i].y;
             thisPoint.z = laserCloudIn->points[i].z;
             thisPoint.intensity = laserCloudIn->points[i].intensity;
+            thisPoint.label = laserCloudIn->points[i].label;
 
             float range = pointDistance(thisPoint);
             if (range < lidarMinRange || range > lidarMaxRange)

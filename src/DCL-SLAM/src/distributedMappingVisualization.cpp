@@ -1,4 +1,5 @@
 #include "distributedMapping.h"
+#include <cstring>
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	class distributedMapping: publish visualization msg
@@ -20,7 +21,9 @@ void distributedMapping::globalMapThread()
 void distributedMapping::publishGlobalMap()
 {
 	// early return
-	if(pub_global_map->get_subscription_count() == 0 || initial_values->empty() == true)
+	const bool want_label = pub_global_map->get_subscription_count() > 0;
+	const bool want_rgb   = pub_global_map_rgb->get_subscription_count() > 0;
+	if((!want_label && !want_rgb) || initial_values->empty() == true)
 	{
 		return;
 	}
@@ -73,15 +76,67 @@ void distributedMapping::publishGlobalMap()
 	// downsample visualized points
 	pcl::VoxelGrid<PointPose3D> downsample_filter_for_global_map; // for global map visualization
 	downsample_filter_for_global_map.setLeafSize(map_leaf_size_, map_leaf_size_, map_leaf_size_);
+	downsample_filter_for_global_map.setDownsampleAllData(true);  // preserve semantic label
 	downsample_filter_for_global_map.setInputCloud(global_map_keyframes);
 	downsample_filter_for_global_map.filter(*global_map_keyframes_ds);
 
-	// publish global map
-	sensor_msgs::msg::PointCloud2 global_map_msg;
-	pcl::toROSMsg(*global_map_keyframes_ds, global_map_msg);
-	global_map_msg.header.stamp = robots[id_].time_cloud_input_stamp;
-	global_map_msg.header.frame_id = world_frame_;
-	pub_global_map->publish(global_map_msg);
+	// publish global map (label-bearing)
+	if (want_label)
+	{
+		sensor_msgs::msg::PointCloud2 global_map_msg;
+		pcl::toROSMsg(*global_map_keyframes_ds, global_map_msg);
+		global_map_msg.header.stamp = robots[id_].time_cloud_input_stamp;
+		global_map_msg.header.frame_id = world_frame_;
+		pub_global_map->publish(global_map_msg);
+	}
+
+	// publish RGB-colored global map for RViz (per-point color from labelToRGB).
+	// Construct PointCloud2 manually with the exact (x, y, z, rgb) layout so
+	// RViz reliably exposes the "RGB8" color transformer regardless of PCL's
+	// PointXYZRGB serialization quirks under PCL_NO_PRECOMPILE.
+	if (want_rgb)
+	{
+		const size_t n = global_map_keyframes_ds->size();
+		sensor_msgs::msg::PointCloud2 rgb_msg;
+		rgb_msg.header.stamp = robots[id_].time_cloud_input_stamp;
+		rgb_msg.header.frame_id = world_frame_;
+		rgb_msg.height = 1;
+		rgb_msg.width = static_cast<uint32_t>(n);
+		rgb_msg.is_dense = true;
+		rgb_msg.is_bigendian = false;
+		rgb_msg.point_step = 16;
+		rgb_msg.row_step = rgb_msg.point_step * rgb_msg.width;
+
+		auto make_field = [](const std::string& name, uint32_t offset, uint8_t dtype) {
+			sensor_msgs::msg::PointField f;
+			f.name = name; f.offset = offset; f.datatype = dtype; f.count = 1;
+			return f;
+		};
+		rgb_msg.fields.clear();
+		rgb_msg.fields.push_back(make_field("x",   0,  sensor_msgs::msg::PointField::FLOAT32));
+		rgb_msg.fields.push_back(make_field("y",   4,  sensor_msgs::msg::PointField::FLOAT32));
+		rgb_msg.fields.push_back(make_field("z",   8,  sensor_msgs::msg::PointField::FLOAT32));
+		rgb_msg.fields.push_back(make_field("rgb", 12, sensor_msgs::msg::PointField::FLOAT32));
+
+		rgb_msg.data.resize(static_cast<size_t>(rgb_msg.row_step));
+		for (size_t i = 0; i < n; ++i)
+		{
+			const auto& p = global_map_keyframes_ds->points[i];
+			const auto rgb = labelToRGB(p.label);
+			uint32_t rgb_packed = (static_cast<uint32_t>(rgb[0]) << 16)
+			                    | (static_cast<uint32_t>(rgb[1]) <<  8)
+			                    | (static_cast<uint32_t>(rgb[2]));
+			float rgb_float;
+			std::memcpy(&rgb_float, &rgb_packed, sizeof(float));
+
+			float* ptr = reinterpret_cast<float*>(rgb_msg.data.data() + i * 16);
+			ptr[0] = p.x;
+			ptr[1] = p.y;
+			ptr[2] = p.z;
+			ptr[3] = rgb_float;
+		}
+		pub_global_map_rgb->publish(rgb_msg);
+	}
 }
 
 void distributedMapping::publishLoopClosureConstraint()

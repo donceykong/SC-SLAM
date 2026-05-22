@@ -221,6 +221,7 @@ pcl::PointCloud<PointPose3D>::Ptr paramsServer::transformPointCloud(pcl::PointCl
 		cloud_out->points[i].y = trans_cur(1,0)*p_from.x + trans_cur(1,1)*p_from.y + trans_cur(1,2)*p_from.z + trans_cur(1,3);
 		cloud_out->points[i].z = trans_cur(2,0)*p_from.x + trans_cur(2,1)*p_from.y + trans_cur(2,2)*p_from.z + trans_cur(2,3);
 		cloud_out->points[i].intensity = p_from.intensity;
+		cloud_out->points[i].label = p_from.label;
 	}
 	return cloud_out;
 }
@@ -243,6 +244,7 @@ pcl::PointCloud<PointPose3D>::Ptr paramsServer::transformPointCloud(pcl::PointCl
 		cloud_out->points[i].y = trans_cur(1,0)*p_from.x + trans_cur(1,1)*p_from.y + trans_cur(1,2)*p_from.z + trans_cur(1,3);
 		cloud_out->points[i].z = trans_cur(2,0)*p_from.x + trans_cur(2,1)*p_from.y + trans_cur(2,2)*p_from.z + trans_cur(2,3);
 		cloud_out->points[i].intensity = p_from.intensity;
+		cloud_out->points[i].label = p_from.label;
 	}
 	return cloud_out;
 }

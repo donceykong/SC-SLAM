@@ -133,7 +133,8 @@ private:
     // dcl-slam define
     string name;
     int number_of_cores = 4;
-    pcl::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_surrounding_keyposes;
+    // DCL-SLAM's keyposes are PointPose3D (= PointXYZIL); KdTree must match.
+    pcl::KdTreeFLANN<PointPose3D>::Ptr kdtree_surrounding_keyposes;
 
     string root_dir = ROOT_DIR;
     string map_file_path, lid_topic, imu_topic;
@@ -238,7 +239,7 @@ FastLioMapping::FastLioMapping()
     memset(point_selected_surf, true, sizeof(point_selected_surf));
     memset(res_last, -1000.0f, sizeof(res_last));
 
-    kdtree_surrounding_keyposes.reset(new pcl::KdTreeFLANN<pcl::PointXYZI>());
+    kdtree_surrounding_keyposes.reset(new pcl::KdTreeFLANN<PointPose3D>());
     featsFromMap.reset(new PointCloudXYZI());
     feats_undistort.reset(new PointCloudXYZI());
     feats_down_body.reset(new PointCloudXYZI());
@@ -1069,8 +1070,12 @@ void FastLioMapping::run()
                     Point3(state_point.pos(0), state_point.pos(1), state_point.pos(2)));
             if(dm_->saveFrame(pose_to) == true)
             {
-                // keyframe
-                pcl::PointCloud<pcl::PointXYZI>::Ptr keyframe(new pcl::PointCloud<pcl::PointXYZI>());
+                // keyframe (PointPose3D = PointXYZIL for DCL-SLAM API).
+                // Note: feats_undistort is PointType (pcl::PointXYZINormal) so
+                // copyPointCloud copies x/y/z/intensity and leaves label = 0.
+                // DCL-FAST-LIO doesn't carry labels itself (only DCL-LIO-SAM
+                // wires them in); this keeps the API type-correct.
+                pcl::PointCloud<PointPose3D>::Ptr keyframe(new pcl::PointCloud<PointPose3D>());
                 pcl::copyPointCloud(*feats_undistort, *keyframe);
 
                 dm_->performDistributedMapping(pose_to, keyframe, rclcpp::Time(static_cast<int64_t>(lidar_end_time * 1e9)));
@@ -1078,7 +1083,7 @@ void FastLioMapping::run()
                 if(dm_->updatePoses())
                 {
                     // surrounding poses
-                    pcl::PointCloud<pcl::PointXYZI>::Ptr surrounding_keyposes(new pcl::PointCloud<pcl::PointXYZI>());
+                    pcl::PointCloud<PointPose3D>::Ptr surrounding_keyposes(new pcl::PointCloud<PointPose3D>());
                     static double search_radius = 5;
                     std::vector<int> indice;
                     std::vector<float> distance;

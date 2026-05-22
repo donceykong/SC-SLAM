@@ -1,4 +1,6 @@
 #include "distributedMapping.h"
+#include <fstream>
+#include <iomanip>
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	class distributedMapping: handle message callback
@@ -326,6 +328,12 @@ void distributedMapping::performDistributedMapping(
 	const pcl::PointCloud<PointPose3D>::Ptr frame_to,
 	const rclcpp::Time& timestamp)
 {
+	// Serialize against performExternLoopClosure (loopClosureThread) and
+	// outliersFiltering (executor). All three mutate local_pose_graph /
+	// optimizer->currentGraph(); without this lock the vector::at() in
+	// outliersFiltering races with concurrent push_back -> out_of_range.
+	std::lock_guard<std::mutex> graph_lock(graph_mutex_);
+
 	// save keyframe cloud
 	pcl::copyPointCloud(*frame_to, *robots[id_].keyframe_cloud);
 	robots[id_].keyframe_cloud_array.push_back(*robots[id_].keyframe_cloud);
@@ -528,12 +536,18 @@ bool distributedMapping::updatePoses()
 
 void distributedMapping::makeDescriptors()
 {
-	while (!store_descriptors.empty())
+	// Drain neighbor descriptors into the local store under the lock so the
+	// descriptor's internal vectors aren't being pushed/resized while the
+	// loop-closure thread is reading them.
 	{
-		auto msg_data = store_descriptors.front().second;
-		auto msg_id = store_descriptors.front().first;
-		store_descriptors.pop_front();
-		keyframe_descriptor->saveDescriptorAndKey(msg_data.values.data(), msg_id, msg_data.index);
+		std::lock_guard<std::mutex> kf_lock(keyframe_descriptor_mutex_);
+		while (!store_descriptors.empty())
+		{
+			auto msg_data = store_descriptors.front().second;
+			auto msg_id = store_descriptors.front().first;
+			store_descriptors.pop_front();
+			keyframe_descriptor->saveDescriptorAndKey(msg_data.values.data(), msg_id, msg_data.index);
+		}
 	}
 
 	if(initial_values->empty() || (!intra_robot_loop_closure_enable_ && !inter_robot_loop_closure_enable_))
@@ -562,8 +576,18 @@ void distributedMapping::makeDescriptors()
 		return;
 	}
 
-	// make and save global descriptors
-	auto descriptor_vec = keyframe_descriptor->makeAndSaveDescriptorAndKey(*cloud_for_decript_ds, id_, initial_values->size()-1);
+	// make and save global descriptors (same lock — protects the internal
+	// vectors the loop-closure thread is iterating over).
+	// Descriptor API takes pcl::PointXYZI; the semantic label isn't part of
+	// the scan-context fingerprint, so copy x/y/z/intensity into a plain
+	// XYZI cloud for the call.
+	pcl::PointCloud<pcl::PointXYZI> cloud_xyzi_for_descriptor;
+	pcl::copyPointCloud(*cloud_for_decript_ds, cloud_xyzi_for_descriptor);
+	std::vector<float> descriptor_vec;
+	{
+		std::lock_guard<std::mutex> kf_lock(keyframe_descriptor_mutex_);
+		descriptor_vec = keyframe_descriptor->makeAndSaveDescriptorAndKey(cloud_xyzi_for_descriptor, id_, initial_values->size()-1);
+	}
 	LOG(INFO) << "makeDescriptors[" << id_ << "]." << endl;
 
 	// extract descriptors values
@@ -699,6 +723,12 @@ void distributedMapping::updateOptimizer()
 
 void distributedMapping::outliersFiltering()
 {
+	// Hold graph_mutex_ for the entire PCM pass. We both iterate
+	// optimizer->currentGraph() via .at(i) AND erase factors mid-loop; if
+	// performExternLoopClosure pushes a new factor in between, the
+	// snapshot indices become stale and we get vector::at(size).
+	std::lock_guard<std::mutex> graph_lock(graph_mutex_);
+
 	robot_local_map_backup = robot_local_map;
 
 	if(use_pcm_)
@@ -1395,4 +1425,57 @@ void distributedMapping::run()
 			optimization_steps++;
 			break;
 	}
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	class distributedMapping: trajectory save (TUM format)
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+void distributedMapping::saveTrajectoryTUM(const std::string& filepath)
+{
+	// Take the locks held by the optimization / loop closure threads so we
+	// see a consistent snapshot of initial_values and keyposes_cloud_6d.
+	std::lock_guard<std::mutex> graph_lock(graph_mutex_);
+
+	if (initial_values == nullptr || keyposes_cloud_6d == nullptr ||
+	    keyposes_cloud_6d->empty())
+	{
+		LOG(INFO) << "[saveTrajectoryTUM<" << id_ << ">] nothing to write." << std::endl;
+		return;
+	}
+
+	std::ofstream ofs(filepath);
+	if (!ofs.is_open())
+	{
+		LOG(WARNING) << "[saveTrajectoryTUM<" << id_ << ">] could not open "
+			<< filepath << " for writing." << std::endl;
+		return;
+	}
+	ofs << "# TUM trajectory: timestamp tx ty tz qx qy qz qw\n";
+	ofs << std::fixed << std::setprecision(9);
+
+	const unsigned char my_chr = static_cast<unsigned char>('a' + id_);
+	size_t n_written = 0;
+	const size_t n_keyposes = keyposes_cloud_6d->size();
+
+	for (size_t idx = 0; idx < n_keyposes; ++idx)
+	{
+		Symbol key(my_chr, idx);
+		if (!initial_values->exists(key))
+			continue;
+
+		const Pose3 pose = initial_values->at<Pose3>(key);
+		const auto q = pose.rotation().toQuaternion();
+		const double t = keyposes_cloud_6d->points[idx].time;
+
+		ofs << t << ' '
+			<< pose.translation().x() << ' '
+			<< pose.translation().y() << ' '
+			<< pose.translation().z() << ' '
+			<< q.x() << ' ' << q.y() << ' ' << q.z() << ' ' << q.w() << '\n';
+		++n_written;
+	}
+	ofs.close();
+
+	LOG(INFO) << "[saveTrajectoryTUM<" << id_ << ">] wrote " << n_written
+		<< " poses to " << filepath << std::endl;
 }

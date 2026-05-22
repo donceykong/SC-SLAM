@@ -15,6 +15,7 @@
 #include <flann/flann.hpp>
 #include <thread>
 #include <deque>
+#include <mutex>
 // dcl_slam define
 #include "paramsServer.h"
 #include "scanContextDescriptor.h"
@@ -78,6 +79,12 @@ class distributedMapping : public paramsServer
 		void makeDescriptors();
 
 		void publishPath();
+
+		// Dump this robot's optimized trajectory to a TUM-format text file
+		// (one line per keyframe: `timestamp tx ty tz qx qy qz qw`). Intended
+		// for offline evaluation with evo_ape against ground-truth poses.
+		// Called automatically from the destructor.
+		void saveTrajectoryTUM(const std::string& filepath);
 
 		void publishTransformation(
 			const rclcpp::Time& timestamp);
@@ -201,6 +208,7 @@ class distributedMapping : public paramsServer
 		rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_loop_closure_constraints;
 		rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_scan_of_scan2map, pub_map_of_scan2map;
 		rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_global_map;
+		rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_global_map_rgb;
 		rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_global_path, pub_local_path;
 		rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_keypose_cloud;
 
@@ -235,6 +243,25 @@ class distributedMapping : public paramsServer
 		bool intra_robot_loop_close_flag; // intra-robot loop is detected
 
 		unique_ptr<scan_descriptor> keyframe_descriptor; // descriptor for keyframe pointcloud
+		// Serializes ALL access to keyframe_descriptor. The executor thread
+		// mutates it via makeDescriptors(); loopClosureThread reads & mutates
+		// it via perform{Intra,Inter}LoopClosure(). Without this lock the
+		// concurrent push/resize on the descriptor's internal vectors causes
+		// (a) random cv::Exception "!fixedSize()" inside lidar-iris OpenCV
+		// ops, and (b) std::out_of_range when a half-mutated vector is read
+		// from the other thread (the 1251@size-1251 crash).
+		std::mutex keyframe_descriptor_mutex_;
+
+		// Serializes concurrent mutation/iteration of the shared factor
+		// graph state (local_pose_graph + optimizer->currentGraph()). Held
+		// by:
+		//   - performDistributedMapping (executor)  when adding odom factor
+		//   - performExternLoopClosure (loopClosureThread) when adding loop factor
+		//   - outliersFiltering (executor) during PCM erase + reindex loop
+		// Without this, performExternLoopClosure's push_back can race with
+		// outliersFiltering's vector::at() iteration -> std::out_of_range
+		// with index == size (the 729@729 and 1251@1251 crashes).
+		std::mutex graph_mutex_;
 
 		deque<dcl_slam::msg::LoopInfo> loop_closures_candidates; // loop closures need to verify
 

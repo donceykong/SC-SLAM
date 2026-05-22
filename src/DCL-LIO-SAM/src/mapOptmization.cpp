@@ -192,6 +192,11 @@ public:
         downSizeFilterSurf.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
         downSizeFilterICP.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
         downSizeFilterSurroundingKeyPoses.setLeafSize(surroundingKeyframeDensity, surroundingKeyframeDensity, surroundingKeyframeDensity);
+        // Carry non-xyz fields (label) through voxel downsampling.
+        downSizeFilterCorner.setDownsampleAllData(true);
+        downSizeFilterSurf.setDownsampleAllData(true);
+        downSizeFilterICP.setDownsampleAllData(true);
+        downSizeFilterSurroundingKeyPoses.setDownsampleAllData(true);
 
         allocateMemory();
     }
@@ -273,25 +278,28 @@ public:
                 Point3(transformTobeMapped[3], transformTobeMapped[4], transformTobeMapped[5]));
             if(dm->saveFrame(pose_to) == true)
             {
-                // keyframe
-                pcl::PointCloud<pcl::PointXYZI>::Ptr keyframe(new pcl::PointCloud<pcl::PointXYZI>());
+                // keyframe (uses PointPose3D = PointXYZIL so the per-point
+                // semantic label flows into the distributed mapping keyframe
+                // store and on to the published global map).
+                pcl::PointCloud<PointPose3D>::Ptr keyframe(new pcl::PointCloud<PointPose3D>());
                 pcl::fromROSMsg(msgIn->cloud_deskewed, *keyframe);
 
                 dm->performDistributedMapping(pose_to, keyframe, timeLaserInfoStamp);
 
-                if(dm->updatePoses())
-                {
-                    // clear map cache
-                    laserCloudMapContainer.clear();
-                }
-                // save updated transform
-                gtsam::Pose3 latest_estimate = dm->getLatestEstimate();
-                transformTobeMapped[0] = latest_estimate.rotation().roll();
-                transformTobeMapped[1] = latest_estimate.rotation().pitch();
-                transformTobeMapped[2] = latest_estimate.rotation().yaw();
-                transformTobeMapped[3] = latest_estimate.translation().x();
-                transformTobeMapped[4] = latest_estimate.translation().y();
-                transformTobeMapped[5] = latest_estimate.translation().z();
+                // [D+A] Do NOT feed the pose-graph estimate back into
+                // transformTobeMapped. It is LIO-SAM's recursive scan-matching
+                // state (updateInitialGuess() seeds the next frame from it), so
+                // overwriting it with an absolute graph estimate injects a
+                // discontinuity into the front-end recursion. The global /
+                // loop-closure correction is carried by the world->odom TF in
+                // distributedMapping::publishTransformation(), which already
+                // uses the anchored distributed estimate (Track 2). The
+                // front-end stays on continuous odometry in odom_frame_.
+                // updatePoses() is still called to keep copy_keyposes_* fresh
+                // for loop-candidate search; with the intra loop no longer in
+                // local ISAM2, it no longer rewrites the trajectory, so the
+                // laserCloudMapContainer cache stays valid (no clear needed).
+                dm->updatePoses();
 
                 dm->makeDescriptors();
 

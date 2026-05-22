@@ -344,8 +344,16 @@ public:
             graphValues.insert(X(0), prevPose_);
             graphValues.insert(V(0), prevVel_);
             graphValues.insert(B(0), prevBias_);
-            // optimize once
-            optimizer.update(graphFactors, graphValues);
+            // optimize once - guarded
+            try {
+                optimizer.update(graphFactors, graphValues);
+            } catch (const gtsam::IndeterminantLinearSystemException& e) {
+                RCLCPP_WARN(get_logger(),
+                    "ISAM2 indeterminate during init, deferring: %s", e.what());
+                graphFactors.resize(0);
+                graphValues.clear();
+                return;
+            }
             graphFactors.resize(0);
             graphValues.clear();
 
@@ -424,9 +432,19 @@ public:
         graphValues.insert(X(key), propState_.pose());
         graphValues.insert(V(key), propState_.v());
         graphValues.insert(B(key), prevBias_);
-        // optimize
-        optimizer.update(graphFactors, graphValues);
-        optimizer.update();
+        // optimize - guard against IndeterminantLinearSystemException
+        // (occurs when the imu/odom graph is briefly underconstrained,
+        // e.g. degenerate first lidar odometry). Reset and skip this update.
+        try {
+            optimizer.update(graphFactors, graphValues);
+            optimizer.update();
+        } catch (const gtsam::IndeterminantLinearSystemException& e) {
+            RCLCPP_WARN(get_logger(),
+                "ISAM2 indeterminate at key %d, resetting optimizer: %s",
+                (int)key, e.what());
+            resetParams();
+            return;
+        }
         graphFactors.resize(0);
         graphValues.clear();
         // Overwrite the beginning of the preintegration for the next step.

@@ -1,5 +1,6 @@
 #ifndef _PARAM_SERVER_H_
 #define _PARAM_SERVER_H_
+#define PCL_NO_PRECOMPILE  // needed for custom point types registered below
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/int8.hpp>
@@ -10,8 +11,14 @@
 #include "dcl_slam/msg/global_descriptor.hpp"
 #include "dcl_slam/msg/neighbor_estimate.hpp"
 // pcl
+#include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
 #include <pcl_conversions/pcl_conversions.h>
+// PCL impl headers — required when PCL_NO_PRECOMPILE is set, so that template
+// methods (e.g. KdTreeFLANN::cleanup) get instantiated for our custom point
+// types instead of being looked up in PCL's precompiled set.
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/search/impl/search.hpp>
 // mapping
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
@@ -19,7 +26,45 @@
 using namespace gtsam;
 using namespace std;
 
-typedef pcl::PointXYZI PointPose3D;
+// Shared point type for the SLAM pipeline. Carries x, y, z, intensity, and a
+// uint16 semantic label so labels survive feature extraction, voxel-grid
+// downsampling, scan-to-map registration, and the distributed mapping
+// keyframe store all the way out to the published map topics for RViz.
+struct PointXYZIL
+{
+    PCL_ADD_POINT4D;
+    PCL_ADD_INTENSITY;
+    uint16_t label;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
+POINT_CLOUD_REGISTER_POINT_STRUCT(PointXYZIL,
+    (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
+    (uint16_t, label, label)
+)
+
+typedef PointXYZIL PointPose3D;
+
+// CU-Multi semantic label palette (matches plot_semantic_map.py / the python
+// LABEL_COLOR dict). Unknown ids fall back to magenta so they're easy to spot.
+inline std::array<uint8_t, 3> labelToRGB(uint16_t label)
+{
+    switch (label)
+    {
+        case 0:  return {128, 128, 128}; // unlabeled
+        case 1:  return { 80,  80,  80}; // road
+        case 2:  return {200, 160, 100}; // sidewalk
+        case 3:  return {140, 100, 180}; // parking
+        case 4:  return {139,  90,  43}; // other-ground
+        case 5:  return { 30, 120, 255}; // building
+        case 6:  return {255, 165,   0}; // fence
+        case 7:  return {144, 238, 144}; // terrain
+        case 9:  return {192, 192, 192}; // bridge
+        case 10: return {255,   0, 255}; // vehicle
+        case 11: return {  0, 100,   0}; // tree
+        case 12: return {255, 128,   0}; // stairs
+        default: return {255,   0, 255}; // unknown id (also magenta)
+    }
+}
 struct PointPose6D
 {
     float x;

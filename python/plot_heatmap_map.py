@@ -32,7 +32,7 @@ def _parse_args():
     )
     p.add_argument(
         "--data-dir",
-        default="/media/donceykong/doncey_ssd_02/datasets/CU_MULTI",
+        default="/media/donceykong/donceys_data_ssd/datasets/cu_multi",
         help="Root dataset directory",
     )
     p.add_argument(
